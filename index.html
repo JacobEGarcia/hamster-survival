@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hamster Survival Simulator</title>
+<style>
+:root{--bg:#141310;--card:#1e1c17;--line:#2e2a22;--ink:#efe7d7;--dim:#8f8672;--accent:#e8b04b;--good:#8fd18f;--bad:#e0705e;--blue:#7fb4d8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:36px 18px}
+h1{font-size:26px;letter-spacing:5px;color:var(--accent);text-shadow:0 0 22px rgba(232,176,75,.28);text-align:center}
+.sub{color:var(--dim);font-size:11px;letter-spacing:2.5px;margin-top:8px;text-transform:uppercase;text-align:center}
+#cage{margin:26px 0 6px;font-size:72px;line-height:1;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));transition:transform .2s}
+#cage.act{transform:scale(1.12)}
+#status{font-size:13px;color:var(--dim);margin:12px 0 4px;min-height:20px;text-align:center}
+#stats{display:grid;grid-template-columns:repeat(2,minmax(180px,220px));gap:10px;margin:18px 0 20px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat .lbl{font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;display:flex;justify-content:space-between}
+.bar{height:9px;background:#0d0c0a;border-radius:6px;margin-top:8px;overflow:hidden}
+.fill{height:100%;border-radius:6px;transition:width .35s ease}
+#actions{display:grid;grid-template-columns:repeat(2,minmax(180px,220px));gap:10px}
+button{cursor:pointer;background:var(--card);border:1px solid var(--line);border-radius:12px;color:var(--ink);font-family:inherit;font-size:14px;padding:14px 10px;letter-spacing:1px;transition:.15s}
+button:hover:not(:disabled){border-color:var(--accent);transform:translateY(-2px)}
+button:disabled{opacity:.35;cursor:not-allowed}
+button small{display:block;color:var(--dim);font-size:10px;margin-top:5px;letter-spacing:.5px}
+#hud{margin-top:22px;font-size:12px;color:var(--dim);letter-spacing:1.5px;text-align:center}
+#hud b{color:var(--accent)}
+#log{margin-top:14px;width:min(470px,92vw);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:12px;line-height:1.8;height:110px;overflow-y:auto;color:#c9bfa8}
+#log .bad{color:var(--bad)} #log .good{color:var(--good)}
+#overlay{position:fixed;inset:0;background:rgba(10,9,7,.88);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:20px;z-index:10}
+#overlay.show{display:flex}
+#overlay h2{font-size:30px;letter-spacing:6px;color:var(--accent)}
+#overlay p{color:var(--dim);max-width:420px;line-height:1.7;font-size:13px}
+#again{background:var(--accent);border:none;color:#241c08;font-weight:700;padding:13px 30px;border-radius:12px;font-size:14px;letter-spacing:2px}
+</style>
+</head>
+<body>
+<h1>HAMSTER SURVIVAL</h1>
+<div class="sub">one hamster. one cage. thirty days.</div>
+<div id="cage">🐹</div>
+<div id="status">Nibbling quietly.</div>
+<div id="stats">
+  <div class="stat"><div class="lbl"><span>Food</span><span id="vFood"></span></div><div class="bar"><div class="fill" id="bFood" style="background:var(--accent)"></div></div></div>
+  <div class="stat"><div class="lbl"><span>Water</span><span id="vWater"></span></div><div class="bar"><div class="fill" id="bWater" style="background:var(--blue)"></div></div></div>
+  <div class="stat"><div class="lbl"><span>Energy</span><span id="vEnergy"></span></div><div class="bar"><div class="fill" id="bEnergy" style="background:var(--good)"></div></div></div>
+  <div class="stat"><div class="lbl"><span>Cleanliness</span><span id="vClean"></span></div><div class="bar"><div class="fill" id="bClean" style="background:#c9a0dc"></div></div></div>
+</div>
+<div id="actions">
+  <button data-a="feed">FEED<small>+28 food &middot; &frac12; day</small></button>
+  <button data-a="water">FILL BOTTLE<small>+32 water &middot; &frac12; day</small></button>
+  <button data-a="clean">CLEAN CAGE<small>+35 clean &middot; 1 day</small></button>
+  <button data-a="sleep">LET SLEEP<small>+40 energy &middot; 1 day</small></button>
+</div>
+<div id="hud">DAY <b id="day">1</b> / 30 &nbsp;&middot;&nbsp; WHEEL LAPS <b id="laps">0</b> &nbsp;&middot;&nbsp; BEST <b id="best">-</b></div>
+<div id="log"></div>
+<div id="overlay"><h2 id="ovTitle"></h2><p id="ovBody"></p><button id="again">RESTART</button></div>
+<script>
+const S={food:80,water:80,energy:90,clean:75,day:1,laps:0,alive:true};
+const $=id=>document.getElementById(id);
+const log=(m,c)=>{const d=document.createElement('div');if(c)d.className=c;d.textContent='Day '+S.day+' - '+m;$('log').prepend(d);};
+const clamp=v=>Math.max(0,Math.min(100,Math.round(v)));
+function render(){
+  for(const k of ['food','water','energy','clean']){
+    $('b'+k[0].toUpperCase()+k.slice(1)).style.width=S[k]+'%';
+    $('v'+k[0].toUpperCase()+k.slice(1)).textContent=S[k]+'%';
+  }
+  $('day').textContent=S.day;
+  $('laps').textContent=S.laps;
+  $('best').textContent=localStorage.hamsterBest||'-';
+}
+function tick(days){
+  S.day+=days;
+  S.food=clamp(S.food-11*days); S.water=clamp(S.water-15*days);
+  S.energy=clamp(S.energy-8*days); S.clean=clamp(S.clean-13*days);
+  if(S.energy>35&&Math.random()<.5){const l=200+Math.floor(Math.random()*800);S.laps+=l;log('Night wheel session: '+l+' laps.','good');}
+  if(S.clean<25&&Math.random()<.35)log('The cage smells. The hamster judges you.','bad');
+  if(S.food<=0||S.water<=0)return die(S.food<=0?'Starved. The food bowl was empty for days.':'Dehydrated. The bottle ran dry.');
+  if(S.day>30)return win();
+  render();
+}
+function act(a){
+  if(!S.alive)return;
+  const cage=$('cage');cage.classList.add('act');setTimeout(()=>cage.classList.remove('act'),200);
+  if(a==='feed'){S.food=clamp(S.food+28);S.energy=clamp(S.energy+4);$('status').textContent='Stuffing cheeks.';log('Refilled the food bowl.');tick(.5);}
+  if(a==='water'){S.water=clamp(S.water+32);$('status').textContent='Glug glug glug.';log('Fresh water in the bottle.');tick(.5);}
+  if(a==='clean'){S.clean=clamp(S.clean+35);S.energy=clamp(S.energy-6);$('status').textContent='Fresh bedding.';log('Cage cleaned. Bedding fluffed.');tick(1);}
+  if(a==='sleep'){S.energy=clamp(S.energy+40);$('status').textContent='Curled into a ball. Zzz.';log('A long, deep hamster nap.');tick(1);}
+}
+function die(why){S.alive=false;show('GONE TO THE BIG WHEEL',why+' Survived to day '+S.day+' with '+S.laps+' wheel laps.');}
+function win(){
+  S.alive=false;
+  const best=Math.max(S.laps,+(localStorage.hamsterBest||0));localStorage.hamsterBest=best;
+  show('30 DAYS SURVIVED','A thriving, round, judgmental hamster. '+S.laps+' total wheel laps. It has never known hardship, only snacks.');
+}
+function show(t,b){$('ovTitle').textContent=t;$('ovBody').textContent=b;$('overlay').classList.add('show');}
+document.querySelectorAll('#actions button').forEach(b=>b.onclick=()=>act(b.dataset.a));
+$('again').onclick=()=>location.reload();
+render();
+log('A hamster arrives. It is small and full of opinions.');
+</script>
+</body>
+</html>
