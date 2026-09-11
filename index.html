@@ -3,39 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hamster Survival Simulator</title>
+<title>Hamster Survival</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐹</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#141310;--card:#1e1c17;--line:#2e2a22;--ink:#efe7d7;--dim:#8f8672;--accent:#e8b04b;--good:#8fd18f;--bad:#e0705e;--blue:#7fb4d8}
+:root{--bg:#fdf6ec;--ink:#3d2f22;--dim:#a08a70;--accent:#e0a32e;--blue:#5b8dd9;--good:#5da865;--line:#efe0c8;--card:#fffdf7}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:36px 18px}
-h1{font-size:26px;letter-spacing:5px;color:var(--accent);text-shadow:0 0 22px rgba(232,176,75,.28);text-align:center}
-.sub{color:var(--dim);font-size:11px;letter-spacing:2.5px;margin-top:8px;text-transform:uppercase;text-align:center}
-#cage{margin:26px 0 6px;font-size:72px;line-height:1;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));transition:transform .2s}
+body{background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:44px 16px 64px}
+h1{font-size:34px;font-weight:900;letter-spacing:.02em}
+.sub{color:var(--dim);font-size:13px;font-weight:700;margin-top:4px}
+#cage{margin:26px 0 6px;font-size:72px;line-height:1;width:150px;height:150px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#fffdf7 40%,#f7e8cd);border:2px dashed #e3cf9f;border-radius:50%;transition:transform .2s}
 #cage.act{transform:scale(1.12)}
-#status{font-size:13px;color:var(--dim);margin:12px 0 4px;min-height:20px;text-align:center}
-#stats{display:grid;grid-template-columns:repeat(2,minmax(180px,220px));gap:10px;margin:18px 0 20px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-.stat .lbl{font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;display:flex;justify-content:space-between}
-.bar{height:9px;background:#0d0c0a;border-radius:6px;margin-top:8px;overflow:hidden}
-.fill{height:100%;border-radius:6px;transition:width .35s ease}
-#actions{display:grid;grid-template-columns:repeat(2,minmax(180px,220px));gap:10px}
-button{cursor:pointer;background:var(--card);border:1px solid var(--line);border-radius:12px;color:var(--ink);font-family:inherit;font-size:14px;padding:14px 10px;letter-spacing:1px;transition:.15s}
-button:hover:not(:disabled){border-color:var(--accent);transform:translateY(-2px)}
-button:disabled{opacity:.35;cursor:not-allowed}
-button small{display:block;color:var(--dim);font-size:10px;margin-top:5px;letter-spacing:.5px}
-#hud{margin-top:22px;font-size:12px;color:var(--dim);letter-spacing:1.5px;text-align:center}
-#hud b{color:var(--accent)}
-#log{margin-top:14px;width:min(470px,92vw);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:12px;line-height:1.8;height:110px;overflow-y:auto;color:#c9bfa8}
-#log .bad{color:var(--bad)} #log .good{color:var(--good)}
-#overlay{position:fixed;inset:0;background:rgba(10,9,7,.88);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:20px;z-index:10}
+#status{font-style:italic;color:var(--dim);font-size:14.5px;margin:14px 0 4px;min-height:22px}
+#stats{width:min(430px,94vw);margin-top:18px;display:grid;gap:10px}
+.stat .lbl{display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.stat .bar{height:10px;background:#f3e9d4;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.stat .fill{height:100%;border-radius:999px;transition:width .3s}
+#actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(430px,94vw);margin-top:18px}
+#actions button{cursor:pointer;padding:12px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:800;letter-spacing:.06em;transition:all .15s}
+#actions button small{display:block;font-weight:700;font-size:10.5px;color:var(--dim);margin-top:3px;letter-spacing:0}
+#actions button:hover{border-color:var(--accent);transform:translateY(-1px)}
+#hud{margin-top:18px;font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--dim)}
+#hud b{color:var(--accent);margin:0 2px}
+#log{width:min(430px,94vw);margin-top:14px;font-size:12.5px;color:var(--dim);line-height:1.9;border-top:1px solid var(--line);padding-top:12px}
+#log:empty{display:none}
+#log b{color:var(--ink)}
+#overlay{position:fixed;inset:0;background:rgba(50,38,22,.9);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:24px;z-index:20}
 #overlay.show{display:flex}
-#overlay h2{font-size:30px;letter-spacing:6px;color:var(--accent)}
-#overlay p{color:var(--dim);max-width:420px;line-height:1.7;font-size:13px}
-#again{background:var(--accent);border:none;color:#241c08;font-weight:700;padding:13px 30px;border-radius:12px;font-size:14px;letter-spacing:2px}
+#overlay h2{font-size:30px;letter-spacing:2px;color:#f5d89a;font-weight:900}
+#overlay p{color:#d8c4a4;max-width:420px;line-height:1.7;font-size:14px}
+#again{cursor:pointer;padding:13px 28px;border-radius:999px;border:2px solid #f5d89a;background:transparent;color:#f5d89a;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+#again:hover{background:#f5d89a;color:#3d2f22}
 </style>
 </head>
 <body>
-<h1>HAMSTER SURVIVAL</h1>
+<h1>Hamster Survival</h1>
 <div class="sub">one hamster. one cage. thirty days.</div>
 <div id="cage">🐹</div>
 <div id="status">Nibbling quietly.</div>
